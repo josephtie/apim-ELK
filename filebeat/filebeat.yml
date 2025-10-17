@@ -1,0 +1,14 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/wso2apimanager/*.log  # Chemin vers les logs du WSO2 API Manager
+    fields:
+      service: "wso2_apimanager"  # Indiquer le service pour différencier les logs
+    fields_under_root: true
+
+output.logstash:
+  hosts: ["logstash:5044"]  # Envoie les logs à Logstash via le port 5044
+
+setup.kibana:
+  host: "kibana:5601"  # Permet à Filebeat d'interagir avec Kibana pour la visualisation

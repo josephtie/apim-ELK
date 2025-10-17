@@ -1,0 +1,111 @@
+version: "3.8"
+services:
+  # WSO2 API Manager 4.2.0 (incluant ESB)
+  apimanager:
+    image: wso2am/wso2am:4.2.0-alpine # Version 4.2.0 avec ESB intégré
+    container_name: wso2_apimanager
+    environment:
+      - USER=wso2user
+      - PASS=wso2pass
+      - TZ=UTC
+    ports:
+      - "9443:9443"  # Port HTTPS par défaut pour l'APIM
+      - "8280:8280"  # Port HTTP
+      - "8243:8243"  # Port HTTPS Gateway
+    volumes:
+      - ./apimanager_repository:/home/wso2carbon/wso2am/repository
+      - ./logs/apimanager:/var/log/wso2apimanager  # Rediriger les logs vers un dossier
+    depends_on:
+      - apimanager_db
+      - logstash
+    restart: always
+    #networks:
+    #  - wso2_network
+
+  # WSO2 API Manager Database (PostgreSQL)
+  apimanager_db:
+    image: postgres:13
+    container_name: wso2_apimanager_db
+    environment:
+      - POSTGRES_USER=wso2apimanager
+      - POSTGRES_PASSWORD=wso2apipass
+      - POSTGRES_DB=wso2apimanagerdb
+    volumes:
+      - ./apimanager_db_data:/var/lib/postgresql/data
+    restart: always
+    #networks:
+    #  - wso2_network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.1
+    container_name: elasticsearch
+    environment:
+      - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    restart: always
+  # networks:
+  #   - wso2_network
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.5.1
+    container_name: logstash
+    volumes:
+      - ./logstash_pipeline:/usr/share/logstash/pipeline  # Contient la config pipeline Logstash
+      - ./logs/logstash:/var/log  # Logs montés ici pour être traités
+    ports:
+      - "5044:5044"  # Port Filebeat -> Logstash
+    restart: always
+  #  networks:
+  #   - wso2_network
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.1
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    restart: always
+  #  networks:
+  #    - wso2_network
+
+  # Filebeat pour collecter les logs
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.5.1
+    container_name: filebeat
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml  # Configuration Filebeat
+      - ./logs/filebeat:/var/log  # Répertoire où sont montés les logs des services WSO2
+    depends_on:
+      - logstash
+    restart: always
+  #  networks:
+  #    - wso2_network
+
+  # Réseau Docker pour l'isolement
+  #networks:
+  #  wso2_network:
+  #    driver: bridge
+
+  # Volumes
+volumes:
+    apimanager_db_data:
+    apimanager_repository:
+    elasticsearch_data:
+    logs:
+
+
+
