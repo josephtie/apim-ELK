@@ -87,7 +87,7 @@ services:
     image: docker.elastic.co/beats/filebeat:8.5.1
     container_name: filebeat
     volumes:
-      - ./filebeat:/usr/share/filebeat/filebeat.yml  # Configuration Filebeat
+      - ./filebeat:/usr/share/filebeat  # Configuration Filebeat
       - ./logs/filebeat:/var/log  # Répertoire où sont montés les logs des services WSO2
     depends_on:
       - logstash
@@ -101,11 +101,7 @@ services:
   #    driver: bridge
 
   # Volumes
-volumes:
-    apimanager_db_data:
-    apimanager_repository:
-    elasticsearch_data:
-    logs:
+
 
 
 
