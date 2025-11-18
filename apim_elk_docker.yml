@@ -9,7 +9,7 @@ services:
       - PASS=wso2pass
       - TZ=UTC
     ports:
-      - "9443:9443"  # Port HTTPS par défaut pour l'APIM
+      - "9444:9443"  # Port HTTPS par défaut pour l'APIM
       - "8280:8280"  # Port HTTP
       - "8243:8243"  # Port HTTPS Gateway
     volumes:
